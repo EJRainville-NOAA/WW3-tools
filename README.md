@@ -5,10 +5,46 @@ Python tools and utilities for WAVEWATCHIII post-processing and validation.
 ```sh
 git clone https://github.com/NOAA-EMC/WW3-tools
 cd WW3-tools
-pip install .
+pip install -e .
 python3 prep_ww3tools.py
 ```
 &emsp; The installation is done with the steps above, being prep_ww3tools.py a script to check ww3tools installation, set paths, download observations (optional), and run regtests.
+
+## Modern Python Subpackages & Workflow
+
+`ww3tools` provides modular, importable Python subpackages designed for accessing data, running interpolations, and performing model validations and verifications (e.g., validating GFS wave outputs against SoFar buoys for any given date range).
+
+### Subpackages Overview
+
+- `ww3tools.data`: Functions for loading, filtering, and converting model outputs (GFS/WW3) and buoy observations (SoFar, NDBC) for any date range. Includes `convert_sofar_bufr_to_nc`, `read_sofar_nc`, `load_sofar_buoys`, and `read_gfs_data`.
+- `ww3tools.interpolation`: Routines for spatial and temporal grid-to-point interpolation. Includes `setup_spatial_temporal_interpolator`, `interpolate_model_to_points`, and `interpolate_model_to_buoy`.
+- `ww3tools.validation`: Verification metrics and end-to-end validation tools. Includes `calculate_metrics` and `validate_gfs_with_sofar_buoys`.
+
+### Example: GFS Model Verification with SoFar Buoys
+
+```python
+import ww3tools.data as wdata
+import ww3tools.validation as wval
+
+# Load GFS model outputs and SoFar buoy observations for a date range
+gfs_ds = wdata.read_gfs_data("/path/to/gfs_data", start_date="2026-01-01", end_date="2026-01-10")
+sofar_ds = wdata.load_sofar_buoys("/path/to/sofar_buoys", start_date="2026-01-01", end_date="2026-01-10")
+
+# Perform end-to-end collocation and validation
+results = wval.validate_gfs_with_sofar_buoys(
+    gfs_data=gfs_ds,
+    sofar_data=sofar_ds,
+    start_date="2026-01-01",
+    end_date="2026-01-10",
+)
+
+# Collocated dataset (model & buoy matched in space/time)
+collocated_ds = results["collocated_ds"]
+
+# Summary statistics table (Bias, RMSE, MAE, Scatter Index, Correlation, N)
+summary_df = results["summary"]
+print(summary_df)
+```
 
 ## Documentation
 

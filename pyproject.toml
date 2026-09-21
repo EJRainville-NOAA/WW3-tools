@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ww3tools"
+version = "1.2.0"
+description = "Python tools and utilities for WAVEWATCHIII post-processing and validation."
+readme = "README.md"
+license = { text = "LGPLv3" }
+authors = [
+    { name = "Ricardo M. Campos", email = "ricardo.campos@noaa.gov" },
+    { name = "Ali Abdolali" },
+    { name = "Matthew Masarik" },
+    { name = "Saeideh Banihashemi" },
+    { name = "Maryam Mohammadpour" },
+    { name = "Jessica Meixner" }
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "netCDF4",
+    "pandas",
+    "xarray",
+    "tqdm",
+    "pyyaml"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
