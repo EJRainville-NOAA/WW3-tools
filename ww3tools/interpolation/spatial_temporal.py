@@ -1,6 +1,4 @@
-"""
-Spatial and temporal interpolation routines for model outputs and observation datasets.
-"""
+from __future__ import annotations
 
 import numpy as np
 import pandas as pd
@@ -36,17 +34,31 @@ def setup_spatial_temporal_interpolator(
     if var_name not in model_ds:
         raise KeyError(f"Variable '{var_name}' not in dataset.")
 
-    lats = model_ds[lat_coord].values if lat_coord in model_ds else model_ds['lat'].values
-    lons = model_ds[lon_coord].values if lon_coord in model_ds else model_ds['lon'].values
-    times = model_ds[time_coord].values if time_coord in model_ds else model_ds['time'].values
+    actual_lat = lat_coord if lat_coord in model_ds else ('lat' if 'lat' in model_ds else None)
+    actual_lon = lon_coord if lon_coord in model_ds else ('lon' if 'lon' in model_ds else None)
+    actual_time = time_coord if time_coord in model_ds else ('time' if 'time' in model_ds else None)
 
-    lons = np.where(lons < 0, lons + 360, lons)
+    if not actual_lat or not actual_lon or not actual_time:
+        raise KeyError(f"Could not locate lat/lon/time coordinates in dataset for {var_name}")
+
+    # Standardize longitudes to 0..360 and sort coordinates
+    ds_sub = model_ds
+    lons_val = ds_sub[actual_lon].values
+    if np.any(lons_val < 0):
+        lons_val = np.where(lons_val < 0, lons_val + 360, lons_val)
+        ds_sub = ds_sub.assign_coords({actual_lon: lons_val}).sortby(actual_lon)
+
+    if not ds_sub[actual_lat].to_index().is_monotonic_increasing:
+        ds_sub = ds_sub.sortby(actual_lat)
+
+    lats = ds_sub[actual_lat].values
+    lons = ds_sub[actual_lon].values
+    times = ds_sub[actual_time].values
+
     times_unix = (pd.to_datetime(times) - pd.Timestamp("1970-01-01")) // pd.Timedelta("1s")
 
-    data = model_ds[var_name]
-    if 'time' in data.dims and data.dims.index('time') != 2:
-        dims_other = [d for d in data.dims if d != 'time']
-        data = data.transpose(dims_other[0], dims_other[1], 'time')
+    # Transpose data explicitly to (latitude, longitude, time)
+    data = ds_sub[var_name].transpose(actual_lat, actual_lon, actual_time)
 
     interpolator = RegularGridInterpolator(
         (lats, lons, times_unix.values),
@@ -74,19 +86,14 @@ def interpolate_model_to_points(
     ----------
     model_ds : xr.Dataset
     target_lats : array-like
-        Target latitudes.
     target_lons : array-like
-        Target longitudes.
     target_times : array-like
-        Target times (datetime, Timestamp, or string).
     variables : list of str, optional
-        Variables to interpolate. If None, interpolates all data variables.
     lat_coord, lon_coord, time_coord : str
 
     Returns
     -------
     xr.Dataset
-        Dataset of interpolated variables along dimension 'point' or 'time'.
     """
     target_lats = np.asarray(target_lats, dtype=float)
     target_lons = np.asarray(target_lons, dtype=float)
@@ -132,16 +139,12 @@ def interpolate_model_to_buoy(
     Parameters
     ----------
     model_ds : xr.Dataset
-        Gridded model dataset (e.g. GFS model).
     buoy_ds : xr.Dataset
-        Buoy observation dataset containing latitude, longitude, and time coordinates.
     variables : list of str, optional
-        Model variables to interpolate.
 
     Returns
     -------
     xr.Dataset
-        Combined dataset containing buoy observations and collocated/interpolated model outputs.
     """
     buoy_time = buoy_ds['time'].values
 

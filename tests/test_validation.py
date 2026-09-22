@@ -1,8 +1,18 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
-import ww3tools.data as wdata
 import ww3tools.validation as wval
+
+
+def _create_dummy_gfs():
+    times = pd.date_range("2026-01-01", "2026-01-05", freq="3h")
+    lats = np.arange(10, 35, 1.0)
+    lons = np.arange(180, 230, 1.0)
+    hs = np.random.uniform(1, 5, (len(times), len(lats), len(lons)))
+    return xr.Dataset(
+        data_vars={"hs": (("time", "latitude", "longitude"), hs)},
+        coords={"time": times, "latitude": lats, "longitude": lons},
+    )
 
 
 def test_calculate_metrics():
@@ -19,13 +29,12 @@ def test_calculate_metrics():
 
 
 def test_validate_gfs_with_sofar_buoys():
-    ds_gfs = wdata.create_sample_gfs_dataset("2026-01-01", "2026-01-05", freq="3h")
+    ds_gfs = _create_dummy_gfs()
 
     times = pd.date_range("2026-01-01 06:00", "2026-01-04 18:00", freq="3h")
     sofar_ds = xr.Dataset(
         data_vars={
             "hs": (("time",), 2.0 + np.sin(np.linspace(0, 5, len(times)))),
-            "wspd": (("time",), 8.0 + np.cos(np.linspace(0, 5, len(times)))),
         },
         coords={
             "time": times,

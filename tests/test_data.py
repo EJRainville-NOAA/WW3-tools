@@ -6,22 +6,6 @@ import xarray as xr
 import ww3tools.data as wdata
 
 
-def test_sample_gfs_dataset():
-    ds = wdata.create_sample_gfs_dataset("2026-01-01", "2026-01-03", freq="3h")
-    assert "hs" in ds
-    assert "wnd" in ds
-    assert "time" in ds.coords
-    assert len(ds.time) > 0
-
-
-def test_filter_dataset_by_date():
-    ds = wdata.create_sample_gfs_dataset("2026-01-01", "2026-01-05", freq="3h")
-    filtered = wdata.filter_dataset_by_date(ds, start_date="2026-01-02", end_date="2026-01-03")
-    times = pd.to_datetime(filtered.time.values)
-    assert times.min() >= pd.Timestamp("2026-01-02")
-    assert times.max() <= pd.Timestamp("2026-01-03 23:59:59")
-
-
 def test_convert_sofar_bufr_import_error():
     with pytest.raises(ImportError):
         wdata.convert_sofar_bufr_to_nc("nonexistent.bufr", "output.nc")

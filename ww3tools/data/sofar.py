@@ -1,6 +1,4 @@
-"""
-Data utilities for reading, converting, and processing SoFar buoy measurements.
-"""
+from __future__ import annotations
 
 from datetime import datetime
 import os
