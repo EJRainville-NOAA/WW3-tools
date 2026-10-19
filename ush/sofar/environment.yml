@@ -1,0 +1,15 @@
+name: sofar-tools
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - netcdf4
+  - xarray
+  - dask
+  - distributed
+  - zarr
+  - cfgrib
+  - eccodes
+  - nceplibs-bufr
