@@ -3,7 +3,7 @@ import os
 import xarray as xr
 import dask
 import numpy as np
-import ww3tools.sofar_tools as sf
+from ww3tools import sofar_tools as sf
 
 def main():
     parser = argparse.ArgumentParser(description="Build WW3 vs Sofar Buoy Matchup Files")
