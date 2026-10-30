@@ -3,8 +3,8 @@
 #SBATCH -q debug
 #SBATCH -t 00:30:00
 #SBATCH -A marine-cpu
-#SBATCH -J submit_sofar
-#SBATCH -o submit_sofar.out
+#SBATCH -J make_sofar_matchup
+#SBATCH -o make_sofar_matchup.out
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
